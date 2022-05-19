@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -15,10 +17,11 @@ namespace CalculMoyenne
         public Form1()
         {
             InitializeComponent();
+            fill_listbox();
         }
 
         Etudiant etud = new Etudiant();
-        string nom = "";
+      
 
         private void label1_Click(object sender, EventArgs e)
         {
@@ -29,10 +32,32 @@ namespace CalculMoyenne
         {
 
         }
+        void fill_listbox()
+        {
+           string myConnection = ConfigurationManager.ConnectionStrings["connexion"].ConnectionString;
+           SqlConnection conn = new SqlConnection(myConnection);
+           string sql = "SELECT * FROM MoyET";
+           SqlCommand cmd = new SqlCommand(sql, conn);
+            try
+            {
+                conn.Open();
+                SqlDataReader sqlDataReader = cmd.ExecuteReader();
+                while (sqlDataReader.Read())
+                {
+                    string name=sqlDataReader.GetString(1);
+                    lst_Moyenne.Items.Add(name);
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
 
+        }
         private void button3_Click(object sender, EventArgs e)
         {
-            lst_Moyenne.Items.Add(txt_NomPrenom.Text + "                                " + txt_Moyenne.Text);
+            lst_Moyenne.Items.Add(txt_NomPrenom.Text);
 
 
 
@@ -54,7 +79,7 @@ namespace CalculMoyenne
             }
 
 
-            nom = txt_NomPrenom.Text;
+            
             txt_NomPrenom.Text = "";
             txt_NoteDS.Text = "";
             txt_NoteExamen.Text = "";
@@ -64,9 +89,10 @@ namespace CalculMoyenne
         }
 
         private void button2_Click(object sender, EventArgs e)
-        {
+        {//probleme de suppression
             lst_Moyenne.Items.Remove(lst_Moyenne.SelectedItem);
-            etud.NomCom = nom;
+
+            etud.NomCom= txt_NomPrenom.Text;
 
             bool success = etud.Delete(etud);
             if (success == true)
@@ -146,6 +172,32 @@ namespace CalculMoyenne
         private void lst_Moyenne_SelectedIndexChanged(object sender, EventArgs e)
         {
             btn_Supprimer.Enabled = true;
+            string myConnection = ConfigurationManager.ConnectionStrings["connexion"].ConnectionString;
+            SqlConnection conn = new SqlConnection(myConnection);
+            string sql = "SELECT * FROM MoyET WHERE  NomCom='" + lst_Moyenne.Text + "';";
+            SqlCommand cmd = new SqlCommand(sql, conn);
+            try
+            {
+                conn.Open();
+                SqlDataReader sqlDataReader = cmd.ExecuteReader();
+                while (sqlDataReader.Read())
+                {
+                    txt_NomPrenom.Text = sqlDataReader.GetString(1);
+                    txt_NoteDS.Text = sqlDataReader.GetString(2);
+                    txt_NoteExamen.Text = sqlDataReader.GetString(3);
+                    txt_NoteTP.Text = sqlDataReader.GetString(4);
+                    txt_Moyenne.Text = sqlDataReader.GetString(5);
+
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+
+
+
         }
 
         private void txt_NoteTP_TextChanged(object sender, EventArgs e)
